@@ -1,0 +1,244 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+
+    "Parameters":{},
+
+
+    "Resources":{
+        
+        "myVPC": {
+          "Type": "AWS::EC2::VPC",
+          "Properties": {
+            "CidrBlock": "192.168.0.0/16"
+          }
+        },
+        
+        "PublicSubnet": {
+          "Type": "AWS::EC2::Subnet",
+          "Properties": {
+            "AvailabilityZone": "us-east-2a",
+            "VpcId":
+            { "Ref": "myVPC" },
+            
+            "CidrBlock": "192.168.1.0/24"
+          }
+        },
+        
+        "PublicRouteTable": {
+          "Type": "AWS::EC2::RouteTable",
+          "Properties": {
+            "VpcId":
+            { "Ref": "myVPC" }
+          }
+        },
+        
+        "PublicRouteTableAssociation": {
+          "Type": "AWS::EC2::SubnetRouteTableAssociation",
+          "Properties": {
+            "SubnetId":
+            { "Ref": "PublicSubnet" },
+            
+            "RouteTableId":
+            { "Ref": "PublicRouteTable" }
+            
+          }
+        },
+        "myIGW" : {
+            "Type" : "AWS::EC2::InternetGateway"
+        },
+        "AttachGateway" : {
+            "Type" : "AWS::EC2::VPCGatewayAttachment",
+            "Properties" : {
+               "VpcId" : { "Ref" : "myVPC" },
+               "InternetGatewayId" : { "Ref" : "myIGW" }
+             }
+         },
+         
+         "PublicRoute": {
+           "Type": "AWS::EC2::Route",
+           "Properties": {
+             "RouteTableId":
+             { "Ref": "PublicRouteTable" },
+             
+             "DestinationCidrBlock": "0.0.0.0/0",
+             "GatewayId":
+             { "Ref": "myIGW" }
+             
+           }
+         },
+         
+         "PrivateSubnet": {
+           "Type": "AWS::EC2::Subnet",
+           "Properties": {
+             "AvailabilityZone": "us-east-2a",
+             "VpcId":
+             { "Ref": "myVPC" },
+             
+             "CidrBlock": "192.168.2.0/24"
+           }
+         },
+         
+         "PrivateRouteTable": {
+           "Type": "AWS::EC2::RouteTable",
+           "Properties": {
+             "VpcId":
+             { "Ref": "myVPC" }
+           }
+         },
+         
+         "PrivateRouteAssociation": {
+           "Type": "AWS::EC2::SubnetRouteTableAssociation",
+           "Properties": {
+             "SubnetId":
+             { "Ref": "PrivateSubnet" },
+             
+             "RouteTableId":
+             { "Ref": "PrivateRouteTable" }
+             
+           }
+         },
+         "EIP" : {
+            "Type" : "AWS::EC2::EIP"
+         },
+         "myNAT" : {
+            "Type" : "AWS::EC2::NatGateway",
+            "Properties" : {
+               "AllocationId" : { "Fn::GetAtt" : ["EIP", "AllocationId"]},
+               "SubnetId" : { "Ref" : "PublicSubnet"}
+              }
+         },
+         "PrivateRoute" : {
+            "Type" : "AWS::EC2::Route",
+            "Properties" : {
+               "RouteTableId" : { "Ref" : "PrivateRouteTable" },
+               "DestinationCidrBlock" : "0.0.0.0/0",
+               "NatGatewayId" : { "Ref" : "myNAT" }
+            }
+         },
+         "mySG30" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "mySG30",
+                "VpcId" : {"Ref" : "myVPC"},
+                "SecurityGroupIngress" : [{
+                    "IpProtocol" : "tcp",
+                    "FromPort" : 80,
+                    "ToPort" : 80,
+                    "CidrIp" : "0.0.0.0/0"},
+                
+
+                   { "IpProtocol" : "tcp",
+                    "FromPort" : 22,
+                    "ToPort" : 22,
+                    "CidrIp" : "0.0.0.0/0"}]
+                
+            }
+        },
+        "myEC2" : {
+            "Type" : "AWS::EC2::Instance",
+            "Properties" : {
+                "KeyName" :"Linux",
+                "ImageID":"ami-00978328f54e31526",
+                "InstanceType":"t2.micro",
+                "Monitoring":"false",
+                "NetworkInterface":[{
+                    "AssociatePublicIpAddress":"True",
+                "DeleteOnTermination":"True",
+                "SubnetID":
+                { "Ref": "PublicSubnet" },
+                
+                "DeviceIndex":"0",
+                "GroupSet":[
+                { "Ref": "mySG30" }
+                ]
+                }]
+            }
+        }
+
+            
+            
+
+
+
+
+
+
+        
+                
+                
+               
+
+         
+
+
+
+
+
+
+         
+         
+         
+
+         
+
+
+        
+        
+        
+        
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+    
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
